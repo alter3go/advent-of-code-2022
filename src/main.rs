@@ -1,8 +1,14 @@
 use rstest::*;
-use std::collections::HashSet;
+use std::cell::RefCell;
+use std::collections::{HashMap, HashSet, VecDeque};
+#[cfg(test)]
+use std::io::Cursor;
+use std::io::Read;
+use std::rc::Rc;
+use std::str;
 use std::{
     fs::File,
-    io::{self, BufRead, Cursor},
+    io::{self, BufRead},
     ops::RangeInclusive,
     path::Path,
 };
@@ -16,6 +22,12 @@ fn main() {
     println!("{}", day_03_2("./input03.txt"));
     println!("{}", day_04_1("./input04.txt"));
     println!("{}", day_04_2("./input04.txt"));
+    println!("{}", day_05_1("./input05.txt"));
+    println!("{}", day_05_2("./input05.txt"));
+    println!("{}", day_06_1("./input06.txt"));
+    println!("{}", day_06_2("./input06.txt"));
+    println!("{}", day_07_1("./input07.txt"));
+    println!("{}", day_07_2("./input07.txt"));
 }
 
 struct CaloriesInput {
@@ -469,4 +481,260 @@ fn day_04_2(filename: &str) -> u32 {
 #[test]
 fn test_day_04_2() {
     assert_eq!(day_04_2("./test04.txt"), 4);
+}
+
+fn day_05_1(filename: &str) -> String {
+    let mut stacks: Vec<VecDeque<char>> = Vec::new();
+    let mut lines = read_lines(filename).unwrap().filter_map(|s| s.ok());
+    let crate_section = lines.by_ref().take_while(|s| s != "");
+    for layer in crate_section {
+        if layer == String::from("") {
+            break;
+        }
+        for (i, doof) in layer.as_bytes().chunks(4).enumerate() {
+            if stacks.len() <= i {
+                stacks.insert(i, VecDeque::new());
+            }
+            if doof[0] == '[' as u8 {
+                stacks[i].push_back(doof[1] as char);
+            }
+        }
+    }
+    for crate_move in lines {
+        let op = &crate_move[5..];
+        let (count_str, rest) = op.split_once(" from ").unwrap();
+        let (from_str, to_str) = rest.split_once(" to ").unwrap();
+        let count: usize;
+        let from: usize;
+        let to: usize;
+        (count, from, to) = (
+            count_str.parse().unwrap(),
+            from_str.parse().unwrap(),
+            to_str.parse().unwrap(),
+        );
+        for _ in 0..count {
+            let deal = stacks[from - 1].pop_front().unwrap();
+            stacks[to - 1].push_front(deal);
+        }
+    }
+    stacks.into_iter().map(|s| s[0]).collect()
+}
+
+fn day_05_2(filename: &str) -> String {
+    let mut stacks: Vec<VecDeque<char>> = Vec::new();
+    let mut lines = read_lines(filename).unwrap().filter_map(|s| s.ok());
+    let crate_section = lines.by_ref().take_while(|s| s != "");
+    for layer in crate_section {
+        if layer == String::from("") {
+            break;
+        }
+        for (i, doof) in layer.as_bytes().chunks(4).enumerate() {
+            if stacks.len() <= i {
+                stacks.insert(i, VecDeque::new());
+            }
+            if doof[0] == '[' as u8 {
+                stacks[i].push_back(doof[1] as char);
+            }
+        }
+    }
+    for crate_move in lines {
+        let op = &crate_move[5..];
+        let (count_str, rest) = op.split_once(" from ").unwrap();
+        let (from_str, to_str) = rest.split_once(" to ").unwrap();
+        let count: usize;
+        let from: usize;
+        let to: usize;
+        (count, from, to) = (
+            count_str.parse().unwrap(),
+            from_str.parse().unwrap(),
+            to_str.parse().unwrap(),
+        );
+        let mut deal: VecDeque<_> = stacks[from - 1].drain(..count).collect();
+        deal.append(&mut stacks[to - 1]);
+        stacks[to - 1] = deal;
+    }
+    stacks.into_iter().map(|s| s[0]).collect()
+}
+
+#[test]
+fn test_day_05_1() {
+    assert_eq!(day_05_1("./test05.txt"), "CMZ");
+}
+
+#[test]
+fn test_day_05_2() {
+    assert_eq!(day_05_2("./test05.txt"), "MCD");
+}
+
+fn find_marker(distinct_count: usize, datastream: &[u8]) -> Option<usize> {
+    let mut iter = datastream.into_iter();
+    let mut last_n: VecDeque<&u8> = VecDeque::from_iter(iter.by_ref().take(distinct_count - 1));
+    let mut unique: HashSet<&u8> = HashSet::new();
+    for (byte_number, byte) in iter.enumerate().map(|(i, b)| (i + distinct_count, b)) {
+        if last_n.contains(&byte) {
+            last_n.push_back(byte);
+            last_n.pop_front();
+        } else {
+            unique.extend(last_n.clone());
+            if unique.len() == distinct_count - 1 {
+                return Some(byte_number);
+            } else {
+                unique.clear();
+                last_n.push_back(byte);
+                last_n.pop_front();
+            }
+        }
+    }
+    None
+}
+
+#[rstest]
+#[case(4, "bvwbjplbgvbhsrlpgdmjqwftvncz".as_bytes(), Some(5))]
+#[case(4, "nppdvjthqldpwncqszvftbrmjlhg".as_bytes(), Some(6))]
+#[case(4, "nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg".as_bytes(), Some(10))]
+#[case(4, "zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw".as_bytes(), Some(11))]
+#[case(4, "abcabcabcabcabcabcabcabc".as_bytes(), None)]
+#[case(14, "mjqjpqmgbljsphdztnvjfqwrcgsmlb".as_bytes(), Some(19))]
+#[case(14, "bvwbjplbgvbhsrlpgdmjqwftvncz".as_bytes(), Some(23))]
+#[case(14, "nppdvjthqldpwncqszvftbrmjlhg".as_bytes(), Some(23))]
+#[case(14, "nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg".as_bytes(), Some(29))]
+#[case(14, "zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw".as_bytes(), Some(26))]
+fn test_find_marker(
+    #[case] distinct_count: usize,
+    #[case] bytes: &[u8],
+    #[case] result: Option<usize>,
+) {
+    assert_eq!(find_marker(distinct_count, bytes), result);
+}
+
+fn first_marker_in_file(distinct_count: usize, filename: &str) -> usize {
+    let file = File::open(filename).unwrap();
+    find_marker(
+        distinct_count,
+        &(file.bytes().filter_map(|b| b.ok()).collect::<Vec<u8>>()),
+    )
+    .unwrap()
+}
+
+fn day_06_1(filename: &str) -> usize {
+    first_marker_in_file(4, filename)
+}
+
+fn day_06_2(filename: &str) -> usize {
+    first_marker_in_file(14, filename)
+}
+
+#[derive(Default)]
+struct DirectoryListing {
+    files: HashMap<String, u64>,
+    subdirectories: HashMap<String, Rc<RefCell<DirectoryListing>>>,
+    parent: Option<Rc<RefCell<DirectoryListing>>>,
+}
+
+impl DirectoryListing {
+    fn new(parent: Option<Rc<RefCell<DirectoryListing>>>) -> DirectoryListing {
+        DirectoryListing {
+            files: HashMap::new(),
+            subdirectories: HashMap::new(),
+            parent,
+        }
+    }
+
+    fn size(&self) -> u64 {
+        self.files.values().sum::<u64>()
+            + self
+                .subdirectories
+                .values()
+                .map(|rc| rc.borrow().size())
+                .sum::<u64>()
+    }
+}
+
+fn inspect_filesystem(filename: &str) -> DirectoryListing {
+    let root = Rc::new(RefCell::new(DirectoryListing::new(None)));
+    {
+        let mut current_directory = Rc::clone(&root);
+        for line in read_lines(filename).unwrap().filter_map(|s| s.ok()) {
+            if line.starts_with("$ ") {
+                let command: Vec<&str> = (&line[2..]).split(' ').collect();
+                if command[0] == "cd" {
+                    let dirname = command[1];
+                    if dirname == "/" {
+                        if current_directory.borrow().parent.is_some() {
+                            current_directory = Rc::clone(&root);
+                        }
+                    } else {
+                        let current_clone = Rc::clone(&current_directory);
+                        if dirname == ".." {
+                            current_directory =
+                                Rc::clone(current_clone.borrow().parent.as_ref().unwrap());
+                        } else {
+                            current_directory = Rc::clone(
+                                current_clone.borrow().subdirectories.get(dirname).unwrap(),
+                            );
+                        }
+                    }
+                }
+            } else if line.starts_with("dir") {
+                let dirname = &line[4..];
+                if !current_directory
+                    .borrow()
+                    .subdirectories
+                    .contains_key(dirname)
+                {
+                    let new_directory = DirectoryListing::new(Some(Rc::clone(&current_directory)));
+                    current_directory
+                        .borrow_mut()
+                        .subdirectories
+                        .insert(dirname.to_string(), Rc::new(RefCell::new(new_directory)));
+                }
+            } else {
+                let (size, filename) = line.split_once(' ').unwrap();
+                current_directory
+                    .borrow_mut()
+                    .files
+                    .insert(filename.to_string(), size.parse().unwrap());
+            }
+        }
+    }
+    root.take()
+}
+
+fn all_sizes(dir: &DirectoryListing) -> Vec<u64> {
+    let mut result: Vec<u64> = Vec::new();
+    for subdir in dir.subdirectories.values() {
+        result.extend(all_sizes(&subdir.borrow()));
+    }
+    result.push(dir.size());
+    result
+}
+
+fn day_07_1(filename: &str) -> u64 {
+    let root = inspect_filesystem(filename);
+    all_sizes(&root)
+        .into_iter()
+        .filter(|size| *size <= 100_000)
+        .sum()
+}
+
+#[test]
+fn test_day_07_1() {
+    assert_eq!(day_07_1("./test07.txt"), 95437);
+}
+
+fn day_07_2(filename: &str) -> u64 {
+    let root = inspect_filesystem(filename);
+    let unused_space = 70_000_000 - root.size();
+    let needed_space: u64 = 30_000_000;
+    let min_space_to_free = needed_space - unused_space;
+    all_sizes(&root)
+        .into_iter()
+        .filter(|size| *size >= min_space_to_free)
+        .min()
+        .unwrap()
+}
+
+#[test]
+fn test_day_07_2() {
+    assert_eq!(day_07_2("./test07.txt"), 24933642);
 }
