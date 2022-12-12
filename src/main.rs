@@ -13,6 +13,10 @@ use std::{
     path::Path,
 };
 
+mod vec2d;
+
+use crate::vec2d::Vec2d;
+
 fn main() {
     println!("{}", day_01_1("./input01.txt"));
     println!("{}", day_01_2("./input01.txt"));
@@ -28,6 +32,7 @@ fn main() {
     println!("{}", day_06_2("./input06.txt"));
     println!("{}", day_07_1("./input07.txt"));
     println!("{}", day_07_2("./input07.txt"));
+    // println!("{}", day_08_1("./input08.txt"));
 }
 
 struct CaloriesInput {
@@ -737,4 +742,85 @@ fn day_07_2(filename: &str) -> u64 {
 #[test]
 fn test_day_07_2() {
     assert_eq!(day_07_2("./test07.txt"), 24933642);
+}
+
+fn forest_from_file(filename: &str) -> Vec2d<i8> {
+    let forest_vec: Vec<i8>;
+    let mut forest_input: Vec<Vec<u8>> = Vec::new();
+    let mut input = io::BufReader::new(File::open(filename).unwrap());
+    loop {
+        let mut line = Vec::new();
+        match input.read_until('\n' as u8, &mut line) {
+            Err(_) => break,
+            _ => {
+                if line.len() < 1 {
+                    break;
+                } else if line.last() == Some(&('\n' as u8)) {
+                    line.pop();
+                }
+            }
+        }
+        forest_input.push(line);
+    }
+    let (width, height) = (forest_input.get(0).unwrap().len(), forest_input.len());
+    forest_vec = forest_input
+        .into_iter()
+        .flatten()
+        .map(|u| str::from_utf8(&[u]).unwrap().parse::<i8>().unwrap())
+        .collect();
+    Vec2d::new(forest_vec, width, height)
+}
+
+#[test]
+fn test_forest_from_file() {
+    forest_from_file("./test08.txt");
+}
+
+fn day_08_1(filename: &str) {
+    let forest = forest_from_file(filename);
+    let from_left = Vec2d::new(
+        (0..forest.row_count)
+            .map(|i| find_min_heights(&Vec::from(forest.row(i))))
+            .flatten()
+            .collect(),
+        forest.row_count,
+        forest.col_count,
+    );
+    let from_right = Vec2d::new(
+        (0..forest.row_count)
+            .map(|i| {
+                let reversed_row = forest.row(i).iter().rev().copied().collect();
+                let mut min_heights = find_min_heights(&reversed_row);
+                min_heights.reverse();
+                min_heights
+            })
+            .flatten()
+            .collect(),
+        forest.row_count,
+        forest.col_count,
+    );
+    println!("From left: {}", from_left);
+    println!("From right: {}", from_right);
+}
+
+#[test]
+fn test_day_08_1() {
+    day_08_1("./test08.txt");
+}
+
+#[rstest]
+#[case(vec![2,5,5,1,2], vec![-1,2,5,5,5])]
+fn test_find_min_heights(#[case] row: Vec<i8>, #[case] result: Vec<i8>) {
+    assert_eq!(find_min_heights(&row), result);
+}
+
+fn find_min_heights(row: &Vec<i8>) -> Vec<i8> {
+    let mut max = -1;
+    row.iter()
+        .map(|s| {
+            let cur = max;
+            max = max.max(*s);
+            cur
+        })
+        .collect()
 }

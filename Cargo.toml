@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 queues = "1.0.2"
 rstest = "0.16.0"
+itertools = "0.10.5"
