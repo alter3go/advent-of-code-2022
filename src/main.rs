@@ -1,11 +1,14 @@
+use itertools::FoldWhile::{Continue, Done};
+use itertools::Itertools;
 use rstest::*;
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet, VecDeque};
+use std::fmt::Debug;
 #[cfg(test)]
 use std::io::Cursor;
 use std::io::Read;
 use std::rc::Rc;
-use std::str;
+use std::str::{self, FromStr};
 use std::{
     fs::File,
     io::{self, BufRead},
@@ -33,6 +36,7 @@ fn main() {
     println!("{}", day_07_1("./input07.txt"));
     println!("{}", day_07_2("./input07.txt"));
     println!("{}", day_08_1("./input08.txt"));
+    println!("{}", day_08_2("./input08.txt"));
 }
 
 struct CaloriesInput {
@@ -744,8 +748,12 @@ fn test_day_07_2() {
     assert_eq!(day_07_2("./test07.txt"), 24933642);
 }
 
-fn forest_from_file(filename: &str) -> Vec2d<i8> {
-    let forest_vec: Vec<i8>;
+fn forest_from_file<T>(filename: &str) -> Vec2d<T>
+where
+    T: Copy + FromStr,
+    T::Err: Debug,
+{
+    let forest_vec: Vec<T>;
     let mut forest_input: Vec<Vec<u8>> = Vec::new();
     let mut input = io::BufReader::new(File::open(filename).unwrap());
     loop {
@@ -766,14 +774,9 @@ fn forest_from_file(filename: &str) -> Vec2d<i8> {
     forest_vec = forest_input
         .into_iter()
         .flatten()
-        .map(|u| str::from_utf8(&[u]).unwrap().parse::<i8>().unwrap())
+        .map(|u| str::from_utf8(&[u]).unwrap().parse::<T>().unwrap())
         .collect();
     Vec2d::new(forest_vec, width, height)
-}
-
-#[test]
-fn test_forest_from_file() {
-    forest_from_file("./test08.txt");
 }
 
 fn day_08_1(filename: &str) -> u32 {
@@ -852,4 +855,52 @@ fn find_min_heights(row: &Vec<i8>) -> Vec<i8> {
             cur
         })
         .collect()
+}
+
+fn day_08_2(filename: &str) -> u32 {
+    let forest: Vec2d<u32> = forest_from_file(filename);
+    let mut best_score = 0;
+    for i in 0..forest.row_count {
+        for j in 0..forest.col_count {
+            let my_height = forest.index(i, j);
+            let scenic_accumulator = |acc, height| {
+                if height >= my_height {
+                    Done(acc + 1)
+                } else {
+                    Continue(acc + 1)
+                }
+            };
+            let left_score = forest.row(i)[..j]
+                .iter()
+                .rev()
+                .fold_while(0, scenic_accumulator)
+                .into_inner();
+            let right_score = forest.row(i)[j..]
+                .iter()
+                .skip(1)
+                .fold_while(0, scenic_accumulator)
+                .into_inner();
+            let col = forest.col(j);
+            let top_score = col[..i]
+                .iter()
+                .rev()
+                .fold_while(0, scenic_accumulator)
+                .into_inner();
+            let bottom_score = col[i..]
+                .iter()
+                .skip(1)
+                .fold_while(0, scenic_accumulator)
+                .into_inner();
+            let score = left_score * right_score * top_score * bottom_score;
+            if score >= best_score {
+                best_score = score;
+            }
+        }
+    }
+    best_score
+}
+
+#[test]
+fn test_day_08_2() {
+    assert_eq!(day_08_2("./test08.txt"), 8);
 }
