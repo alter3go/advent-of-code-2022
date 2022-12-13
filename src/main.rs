@@ -32,7 +32,7 @@ fn main() {
     println!("{}", day_06_2("./input06.txt"));
     println!("{}", day_07_1("./input07.txt"));
     println!("{}", day_07_2("./input07.txt"));
-    // println!("{}", day_08_1("./input08.txt"));
+    println!("{}", day_08_1("./input08.txt"));
 }
 
 struct CaloriesInput {
@@ -776,7 +776,7 @@ fn test_forest_from_file() {
     forest_from_file("./test08.txt");
 }
 
-fn day_08_1(filename: &str) {
+fn day_08_1(filename: &str) -> u32 {
     let forest = forest_from_file(filename);
     let from_left = Vec2d::new(
         (0..forest.row_count)
@@ -799,13 +799,42 @@ fn day_08_1(filename: &str) {
         forest.row_count,
         forest.col_count,
     );
-    println!("From left: {}", from_left);
-    println!("From right: {}", from_right);
+    let mut from_top = forest.clone();
+    for j in 0..forest.col_count {
+        let col_min_heights = find_min_heights(&forest.col(j));
+        for i in 0..forest.row_count {
+            *from_top.index_mut(i, j) = col_min_heights[i];
+        }
+    }
+    let mut from_bottom = forest.clone();
+    for j in 0..forest.col_count {
+        let col_min_heights: Vec<i8> = find_min_heights(&forest.col(j).into_iter().rev().collect())
+            .into_iter()
+            .rev()
+            .collect();
+        for i in 0..forest.row_count {
+            *from_bottom.index_mut(i, j) = col_min_heights[i];
+        }
+    }
+    let mut visible_count = 0;
+    for i in 0..forest.row_count {
+        for j in 0..forest.col_count {
+            let height = forest.index(i, j);
+            if height > from_left.index(i, j)
+                || height > from_right.index(i, j)
+                || height > from_top.index(i, j)
+                || height > from_bottom.index(i, j)
+            {
+                visible_count += 1;
+            }
+        }
+    }
+    visible_count
 }
 
 #[test]
 fn test_day_08_1() {
-    day_08_1("./test08.txt");
+    assert_eq!(day_08_1("./test08.txt"), 21);
 }
 
 #[rstest]

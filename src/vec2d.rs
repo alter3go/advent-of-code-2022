@@ -2,13 +2,19 @@
 use std::fmt;
 
 #[derive(Clone, Debug)]
-pub struct Vec2d<T> {
+pub struct Vec2d<T>
+where
+    T: Copy,
+{
     vec: Vec<T>,
     pub row_count: usize,
     pub col_count: usize,
 }
 
-impl<T> Vec2d<T> {
+impl<T> Vec2d<T>
+where
+    T: Copy,
+{
     pub fn new(vec: Vec<T>, row: usize, col: usize) -> Self {
         assert!(vec.len() == row * col);
         Self {
@@ -23,10 +29,10 @@ impl<T> Vec2d<T> {
         &self.vec[i..(i + self.col_count)]
     }
 
-    pub fn col(&self, col: usize) -> Vec<&T> {
+    pub fn col(&self, col: usize) -> Vec<T> {
         (col..self.vec.len())
             .step_by(self.col_count)
-            .map(|i| &self.vec[i])
+            .map(|i| self.vec[i])
             .collect()
     }
 
@@ -41,7 +47,10 @@ impl<T> Vec2d<T> {
     }
 }
 
-impl<T: std::fmt::Debug> std::fmt::Display for Vec2d<T> {
+impl<T: std::fmt::Debug> std::fmt::Display for Vec2d<T>
+where
+    T: Copy,
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut str = String::new();
         for i in 0..self.row_count {
@@ -57,6 +66,6 @@ impl<T: std::fmt::Debug> std::fmt::Display for Vec2d<T> {
 #[test]
 fn test_vec2d_row_col() {
     let a: Vec2d<u8> = Vec2d::new((1..=30).collect(), 6, 5);
-    assert_eq!(a.col(0), vec![&1, &6, &11, &16, &21, &26]);
+    assert_eq!(a.col(0), vec![1, 6, 11, 16, 21, 26]);
     assert_eq!(a.row(0), &[1, 2, 3, 4, 5]);
 }
