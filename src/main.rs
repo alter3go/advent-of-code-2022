@@ -857,43 +857,75 @@ fn find_min_heights(row: &Vec<i8>) -> Vec<i8> {
         .collect()
 }
 
+fn find_directional_scores(row: &Vec<u32>) -> Vec<u32> {
+    let mut scores = row.clone();
+    scores[0] = 0;
+    for i in 1..row.len() {
+        scores[i] = 1;
+        let mut j = i - 1;
+        while j > 0 && row[j] < row[i] {
+            scores[i] += scores[j];
+            j -= scores[j] as usize;
+        }
+    }
+    scores
+}
+
+#[rstest]
+#[case(vec![3, 5, 3, 9, 0], vec![0, 1, 1, 3, 1])]
+fn test_find_directional_scores(#[case] row: Vec<u32>, #[case] result: Vec<u32>) {
+    assert_eq!(find_directional_scores(&row), result);
+}
+
 fn day_08_2(filename: &str) -> u32 {
     let forest: Vec2d<u32> = forest_from_file(filename);
+    let from_left = Vec2d::new(
+        (0..forest.row_count)
+            .map(|i| find_directional_scores(&Vec::from(forest.row(i))))
+            .flatten()
+            .collect(),
+        forest.row_count,
+        forest.col_count,
+    );
+    let from_right = Vec2d::new(
+        (0..forest.row_count)
+            .map(|i| {
+                let reversed_row = forest.row(i).iter().rev().copied().collect();
+                let mut scores = find_directional_scores(&reversed_row);
+                scores.reverse();
+                scores
+            })
+            .flatten()
+            .collect(),
+        forest.row_count,
+        forest.col_count,
+    );
+    let mut from_top = forest.clone();
+    for j in 0..forest.col_count {
+        let col_scores = find_directional_scores(&forest.col(j));
+        for i in 0..forest.row_count {
+            *from_top.index_mut(i, j) = col_scores[i];
+        }
+    }
+    let mut from_bottom = forest.clone();
+    for j in 0..forest.col_count {
+        let col_scores: Vec<_> = find_directional_scores(&forest.col(j).into_iter().rev().collect())
+            .into_iter()
+            .rev()
+            .collect();
+        for i in 0..forest.row_count {
+            *from_bottom.index_mut(i, j) = col_scores[i];
+        }
+    }
     let mut best_score = 0;
     for i in 0..forest.row_count {
         for j in 0..forest.col_count {
-            let my_height = forest.index(i, j);
-            let scenic_accumulator = |acc, height| {
-                if height >= my_height {
-                    Done(acc + 1)
-                } else {
-                    Continue(acc + 1)
-                }
-            };
-            let left_score = forest.row(i)[..j]
-                .iter()
-                .rev()
-                .fold_while(0, scenic_accumulator)
-                .into_inner();
-            let right_score = forest.row(i)[j..]
-                .iter()
-                .skip(1)
-                .fold_while(0, scenic_accumulator)
-                .into_inner();
-            let col = forest.col(j);
-            let top_score = col[..i]
-                .iter()
-                .rev()
-                .fold_while(0, scenic_accumulator)
-                .into_inner();
-            let bottom_score = col[i..]
-                .iter()
-                .skip(1)
-                .fold_while(0, scenic_accumulator)
-                .into_inner();
-            let score = left_score * right_score * top_score * bottom_score;
-            if score >= best_score {
-                best_score = score;
+            let scenic_score = from_left.index(i, j)
+                * from_right.index(i, j)
+                * from_top.index(i, j)
+                * from_bottom.index(i, j);
+            if scenic_score > best_score {
+                best_score = scenic_score;
             }
         }
     }
