@@ -38,6 +38,7 @@ fn main() {
     println!("{}", day_08_2("./input08.txt"));
     println!("{}", day_09_1("./input09.txt"));
     println!("{}", day_09_2("./input09.txt"));
+    println!("{}", day_10_1("./input10.txt"));
 }
 
 struct CaloriesInput {
@@ -1076,4 +1077,71 @@ fn test_day_09_1() {
 #[case("./test09-2.txt", 36)]
 fn test_day_09_2(#[case] filename: &str, #[case] result: usize) {
     assert_eq!(day_09_2(filename), result);
+}
+
+type Instruction = Option<i32>;
+
+fn run_program(program: Vec<Instruction>) -> Vec<i32> {
+    let mut x = 1;
+    [1].into_iter()
+        .chain(
+            program
+                .into_iter()
+                .map(|instruction| match instruction {
+                    Some(a) => {
+                        vec![0, a]
+                    }
+                    None => vec![0],
+                })
+                .flatten()
+                .map(|a| {
+                    x += a;
+                    x
+                }),
+        )
+        .collect()
+}
+
+#[rstest]
+#[case(vec![None, Some(3), Some(-5)], vec![1, 1, 1, 4, 4, -1])]
+fn test_run_program(#[case] program: Vec<Instruction>, #[case] cycle_x_values: Vec<i32>) {
+    assert_eq!(run_program(program), cycle_x_values);
+}
+
+fn program_from_file(filename: &str) -> Vec<Instruction> {
+    read_lines(filename)
+        .unwrap()
+        .into_iter()
+        .filter_map(|r| r.ok())
+        .map(|line| {
+            if line == "noop" {
+                None
+            } else {
+                if !line.starts_with("addx ") {
+                    panic!("Unknown instruction {}", line);
+                }
+                Some(line[5..].parse::<i32>().unwrap())
+            }
+        })
+        .collect()
+}
+
+#[test]
+fn test_program_from_file() {
+    assert_eq!(
+        program_from_file("./test10.txt"),
+        [None, Some(3), Some(-5),]
+    );
+}
+
+fn day_10_1(filename: &str) -> i32 {
+    let x_values = run_program(program_from_file(filename));
+    [20, 60, 100, 140, 180, 220]
+        .into_iter()
+        .fold(0, |acc, cycle| acc + cycle * x_values[cycle as usize - 1])
+}
+
+#[test]
+fn test_day_10_1() {
+    assert_eq!(day_10_1("./test10-2.txt"), 13140);
 }
