@@ -39,6 +39,7 @@ fn main() {
     println!("{}", day_09_1("./input09.txt"));
     println!("{}", day_09_2("./input09.txt"));
     println!("{}", day_10_1("./input10.txt"));
+    println!("{}", day_10_2("./input10.txt"));
 }
 
 struct CaloriesInput {
@@ -1144,4 +1145,35 @@ fn day_10_1(filename: &str) -> i32 {
 #[test]
 fn test_day_10_1() {
     assert_eq!(day_10_1("./test10-2.txt"), 13140);
+}
+
+fn day_10_2(filename: &str) -> String {
+    let sprite_positions = run_program(program_from_file(filename));
+    let mut output = String::new();
+    for row in 0..6 {
+        for col in 0..40 {
+            let pixel = 40 * row + col;
+            let sprite_pos = sprite_positions[pixel as usize];
+            if sprite_pos - 1 <= col && col <= sprite_pos + 1 {
+                output += "#";
+            } else {
+                output += ".";
+            }
+        }
+        output += "\n";
+    }
+    output
+}
+
+#[test]
+fn test_day_10_2() {
+    assert_eq!(
+        day_10_2("./test10-2.txt"),
+        "##..##..##..##..##..##..##..##..##..##..\n\
+         ###...###...###...###...###...###...###.\n\
+         ####....####....####....####....####....\n\
+         #####.....#####.....#####.....#####.....\n\
+         ######......######......######......####\n\
+         #######.......#######.......#######.....\n"
+    );
 }
