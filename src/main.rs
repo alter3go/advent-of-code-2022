@@ -909,10 +909,11 @@ fn day_08_2(filename: &str) -> u32 {
     }
     let mut from_bottom = forest.clone();
     for j in 0..forest.col_count {
-        let col_scores: Vec<_> = find_directional_scores(&forest.col(j).into_iter().rev().collect())
-            .into_iter()
-            .rev()
-            .collect();
+        let col_scores: Vec<_> =
+            find_directional_scores(&forest.col(j).into_iter().rev().collect())
+                .into_iter()
+                .rev()
+                .collect();
         for i in 0..forest.row_count {
             *from_bottom.index_mut(i, j) = col_scores[i];
         }
