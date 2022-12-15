@@ -6,6 +6,7 @@ use std::fmt::Debug;
 #[cfg(test)]
 use std::io::Cursor;
 use std::io::Read;
+use std::ops::{Add, Mul};
 use std::rc::Rc;
 use std::str::{self, FromStr};
 use std::{
@@ -40,6 +41,7 @@ fn main() {
     println!("{}", day_09_2("./input09.txt"));
     println!("{}", day_10_1("./input10.txt"));
     println!("{}", day_10_2("./input10.txt"));
+    println!("{}", day_11_1("./input11.txt"));
 }
 
 struct CaloriesInput {
@@ -1176,4 +1178,149 @@ fn test_day_10_2() {
          ######......######......######......####\n\
          #######.......#######.......#######.....\n"
     );
+}
+
+#[derive(Debug, PartialEq)]
+struct Monkey {
+    items: VecDeque<u32>,
+    operator: fn(u32, u32) -> u32,
+    operand: Option<u32>,
+    test: u32,
+    if_true: usize,
+    if_false: usize,
+}
+
+fn monkeys_from_file(filename: &str) -> VecDeque<Monkey> {
+    let mut buf = Vec::new();
+    File::open(filename).unwrap().read_to_end(&mut buf).unwrap();
+    String::from_utf8(buf)
+        .unwrap()
+        .split("\n\n")
+        .into_iter()
+        .map(|monkey_str| {
+            let monkey_lines: Vec<&str> = monkey_str.split("\n").collect();
+            let items = monkey_lines[1][18..]
+                .split(", ")
+                .map(|i| i.parse().unwrap())
+                .collect();
+            let (operator_str, argument_str) = monkey_lines[2][23..].split_once(' ').unwrap();
+            let operator = match operator_str {
+                "*" => u32::mul,
+                "+" => u32::add,
+                _ => panic!("Unknown operator"),
+            };
+            let operand = match argument_str {
+                "old" => None,
+                s => Some(s.parse().unwrap()),
+            };
+            let test = monkey_lines[3][21..].parse().unwrap();
+            let if_true = monkey_lines[4][29..].parse().unwrap();
+            let if_false = monkey_lines[5][30..].parse().unwrap();
+            Monkey {
+                items,
+                operator,
+                operand,
+                test,
+                if_true,
+                if_false,
+            }
+        })
+        .collect()
+}
+
+#[test]
+fn test_monkeys_from_file() {
+    assert_eq!(
+        monkeys_from_file("./test11.txt"),
+        VecDeque::from([
+            Monkey {
+                items: VecDeque::from([79, 98]),
+                operator: u32::mul,
+                operand: Some(19),
+                test: 23,
+                if_true: 2,
+                if_false: 3
+            },
+            Monkey {
+                items: VecDeque::from([54, 65, 75, 74]),
+                operator: u32::add,
+                operand: Some(6),
+                test: 19,
+                if_true: 2,
+                if_false: 0
+            },
+            Monkey {
+                items: VecDeque::from([79, 60, 97]),
+                operator: u32::mul,
+                operand: None,
+                test: 13,
+                if_true: 1,
+                if_false: 3
+            },
+            Monkey {
+                items: VecDeque::from([74]),
+                operator: u32::add,
+                operand: Some(3),
+                test: 17,
+                if_true: 0,
+                if_false: 1
+            },
+        ])
+    );
+}
+
+fn do_monkey_business(mut monkeys: VecDeque<Monkey>, rounds: usize, relief: u32) -> u32 {
+    let num_monkeys = monkeys.len();
+    let mut inspections = vec![0; num_monkeys];
+
+    for _ in 0..rounds {
+        for i in 0..num_monkeys {
+            let mut monkey = monkeys.pop_front().unwrap();
+            for _ in 0..monkey.items.len() {
+                let mut item = monkey.items.pop_front().unwrap();
+                inspections[i] += 1;
+                item = (monkey.operator)(
+                    item,
+                    match monkey.operand {
+                        Some(n) => n,
+                        None => item,
+                    },
+                ) / relief;
+                if item % monkey.test == 0 {
+                    let idx = match i < monkey.if_true {
+                        true => monkey.if_true - 1 - i,
+                        false => monkey.if_true + num_monkeys - 1 - i,
+                    };
+                    monkeys[idx].items.push_back(item);
+                } else {
+                    let idx = match i < monkey.if_false {
+                        true => monkey.if_false - 1 - i,
+                        false => monkey.if_false + num_monkeys - 1 - i,
+                    };
+                    monkeys[idx].items.push_back(item);
+                }
+            }
+            monkeys.push_back(monkey);
+        }
+    }
+    inspections.sort();
+    inspections.into_iter().rev().take(2).fold(1, u32::mul)
+}
+
+fn day_11_1(filename: &str) -> u32 {
+    do_monkey_business(monkeys_from_file(filename), 20, 3)
+}
+
+#[test]
+fn test_day_11_1() {
+    assert_eq!(day_11_1("./test11.txt"), 10605);
+}
+
+fn day_11_2(filename: &str) -> u32 {
+    do_monkey_business(monkeys_from_file(filename), 10_000, 1)
+}
+
+#[test]
+fn test_day_11_2() {
+    assert_eq!(day_11_2("./test11.txt"), 2713310158);
 }
