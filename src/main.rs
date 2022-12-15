@@ -42,6 +42,7 @@ fn main() {
     println!("{}", day_10_1("./input10.txt"));
     println!("{}", day_10_2("./input10.txt"));
     println!("{}", day_11_1("./input11.txt"));
+    println!("{}", day_11_2("./input11.txt"));
 }
 
 struct CaloriesInput {
@@ -1182,10 +1183,10 @@ fn test_day_10_2() {
 
 #[derive(Debug, PartialEq)]
 struct Monkey {
-    items: VecDeque<u32>,
-    operator: fn(u32, u32) -> u32,
-    operand: Option<u32>,
-    test: u32,
+    items: VecDeque<u64>,
+    operator: fn(u64, u64) -> u64,
+    operand: Option<u64>,
+    test: u64,
     if_true: usize,
     if_false: usize,
 }
@@ -1205,8 +1206,8 @@ fn monkeys_from_file(filename: &str) -> VecDeque<Monkey> {
                 .collect();
             let (operator_str, argument_str) = monkey_lines[2][23..].split_once(' ').unwrap();
             let operator = match operator_str {
-                "*" => u32::mul,
-                "+" => u32::add,
+                "*" => u64::mul,
+                "+" => u64::add,
                 _ => panic!("Unknown operator"),
             };
             let operand = match argument_str {
@@ -1235,7 +1236,7 @@ fn test_monkeys_from_file() {
         VecDeque::from([
             Monkey {
                 items: VecDeque::from([79, 98]),
-                operator: u32::mul,
+                operator: u64::mul,
                 operand: Some(19),
                 test: 23,
                 if_true: 2,
@@ -1243,7 +1244,7 @@ fn test_monkeys_from_file() {
             },
             Monkey {
                 items: VecDeque::from([54, 65, 75, 74]),
-                operator: u32::add,
+                operator: u64::add,
                 operand: Some(6),
                 test: 19,
                 if_true: 2,
@@ -1251,7 +1252,7 @@ fn test_monkeys_from_file() {
             },
             Monkey {
                 items: VecDeque::from([79, 60, 97]),
-                operator: u32::mul,
+                operator: u64::mul,
                 operand: None,
                 test: 13,
                 if_true: 1,
@@ -1259,7 +1260,7 @@ fn test_monkeys_from_file() {
             },
             Monkey {
                 items: VecDeque::from([74]),
-                operator: u32::add,
+                operator: u64::add,
                 operand: Some(3),
                 test: 17,
                 if_true: 0,
@@ -1269,9 +1270,12 @@ fn test_monkeys_from_file() {
     );
 }
 
-fn do_monkey_business(mut monkeys: VecDeque<Monkey>, rounds: usize, relief: u32) -> u32 {
+fn do_monkey_business(mut monkeys: VecDeque<Monkey>, rounds: usize, relief: u64) -> u64 {
     let num_monkeys = monkeys.len();
     let mut inspections = vec![0; num_monkeys];
+
+    let max_worry = monkeys.iter().map(|m| m.test).fold(1, u64::mul);
+    println!("{}", max_worry);
 
     for _ in 0..rounds {
         for i in 0..num_monkeys {
@@ -1279,13 +1283,14 @@ fn do_monkey_business(mut monkeys: VecDeque<Monkey>, rounds: usize, relief: u32)
             for _ in 0..monkey.items.len() {
                 let mut item = monkey.items.pop_front().unwrap();
                 inspections[i] += 1;
-                item = (monkey.operator)(
+                item = ((monkey.operator)(
                     item,
                     match monkey.operand {
                         Some(n) => n,
                         None => item,
                     },
-                ) / relief;
+                ) / relief)
+                    % max_worry;
                 if item % monkey.test == 0 {
                     let idx = match i < monkey.if_true {
                         true => monkey.if_true - 1 - i,
@@ -1304,10 +1309,10 @@ fn do_monkey_business(mut monkeys: VecDeque<Monkey>, rounds: usize, relief: u32)
         }
     }
     inspections.sort();
-    inspections.into_iter().rev().take(2).fold(1, u32::mul)
+    inspections.into_iter().rev().take(2).fold(1, u64::mul)
 }
 
-fn day_11_1(filename: &str) -> u32 {
+fn day_11_1(filename: &str) -> u64 {
     do_monkey_business(monkeys_from_file(filename), 20, 3)
 }
 
@@ -1316,7 +1321,7 @@ fn test_day_11_1() {
     assert_eq!(day_11_1("./test11.txt"), 10605);
 }
 
-fn day_11_2(filename: &str) -> u32 {
+fn day_11_2(filename: &str) -> u64 {
     do_monkey_business(monkeys_from_file(filename), 10_000, 1)
 }
 
