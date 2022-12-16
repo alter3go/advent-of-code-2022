@@ -1,7 +1,7 @@
 // Mutably borrowed ;) from https://stackoverflow.com/questions/13102786/two-dimensional-vectors-in-rust
 use std::fmt;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Vec2d<T>
 where
     T: Copy,
