@@ -45,6 +45,8 @@ fn main() {
     println!("{}", day_10_2("./input10.txt"));
     println!("{}", day_11_1("./input11.txt"));
     println!("{}", day_11_2("./input11.txt"));
+    println!("{}", day_12_1("./input12.txt"));
+    println!("{}", day_12_2("./input12.txt"));
 }
 
 struct CaloriesInput {
@@ -1391,6 +1393,7 @@ fn test_heightmap_from_file() {
 
 fn paths_from_heightmap(
     heightmap: &Heightmap,
+    reversed_edges: bool,
 ) -> GraphMap<(usize, usize), i32, petgraph::Directed> {
     let mut paths = GraphMap::new();
     for i in 0..heightmap.elevations.row_count {
@@ -1407,7 +1410,11 @@ fn paths_from_heightmap(
                 let them = heightmap.elevations.index(i - 1, j);
                 let them_coords = (i - 1, j);
                 if *them <= me + 1 {
-                    paths.add_edge(me_coords, them_coords, 1);
+                    if reversed_edges {
+                        paths.add_edge(them_coords, me_coords, 1);
+                    } else {
+                        paths.add_edge(me_coords, them_coords, 1);
+                    }
                 }
             }
             if i < heightmap.elevations.row_count - 1 {
@@ -1415,7 +1422,11 @@ fn paths_from_heightmap(
                 let them = heightmap.elevations.index(i + 1, j);
                 let them_coords = (i + 1, j);
                 if *them <= me + 1 {
-                    paths.add_edge(me_coords, them_coords, 1);
+                    if reversed_edges {
+                        paths.add_edge(them_coords, me_coords, 1);
+                    } else {
+                        paths.add_edge(me_coords, them_coords, 1);
+                    }
                 }
             }
             if j > 0 {
@@ -1423,7 +1434,11 @@ fn paths_from_heightmap(
                 let them = heightmap.elevations.index(i, j - 1);
                 let them_coords = (i, j - 1);
                 if *them <= me + 1 {
-                    paths.add_edge(me_coords, them_coords, 1);
+                    if reversed_edges {
+                        paths.add_edge(them_coords, me_coords, 1);
+                    } else {
+                        paths.add_edge(me_coords, them_coords, 1);
+                    }
                 }
             }
             if j < heightmap.elevations.col_count - 1 {
@@ -1431,7 +1446,11 @@ fn paths_from_heightmap(
                 let them = heightmap.elevations.index(i, j + 1);
                 let them_coords = (i, j + 1);
                 if *them <= me + 1 {
-                    paths.add_edge(me_coords, them_coords, 1);
+                    if reversed_edges {
+                        paths.add_edge(them_coords, me_coords, 1);
+                    } else {
+                        paths.add_edge(me_coords, them_coords, 1);
+                    }
                 }
             }
         }
@@ -1441,7 +1460,7 @@ fn paths_from_heightmap(
 
 fn day_12_1(filename: &str) -> i32 {
     let map = heightmap_from_file(filename);
-    let paths = paths_from_heightmap(&map);
+    let paths = paths_from_heightmap(&map, false);
     *dijkstra(&paths, map.start, Some(map.end), |_| 1)
         .get(&map.end)
         .unwrap()
@@ -1450,4 +1469,26 @@ fn day_12_1(filename: &str) -> i32 {
 #[test]
 fn test_day_12_1() {
     assert_eq!(day_12_1("./test12.txt"), 31);
+}
+
+fn day_12_2(filename: &str) -> i32 {
+    let map = heightmap_from_file(filename);
+    let paths = paths_from_heightmap(&map, true);
+    let shortest_paths = dijkstra(&paths, map.end, None, |_| 1);
+    shortest_paths
+        .into_iter()
+        .filter_map(|(k, v)| {
+            if *map.elevations.index(k.0, k.1) == 'a' as u8 {
+                Some(v)
+            } else {
+                None
+            }
+        })
+        .min()
+        .unwrap()
+}
+
+#[test]
+fn test_day_12_2() {
+    assert_eq!(day_12_2("./test12.txt"), 29);
 }
