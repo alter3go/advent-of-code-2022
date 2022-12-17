@@ -1,9 +1,8 @@
-use petgraph::algo::dijkstra;
-use petgraph::prelude::GraphMap;
 use rstest::*;
 use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet, VecDeque};
+use std::env;
 use std::fmt::Debug;
 #[cfg(test)]
 use std::io::Cursor;
@@ -15,38 +14,58 @@ use std::{
     fs::File,
     io::{self, BufRead},
     ops::RangeInclusive,
-    path::Path,
 };
 
+mod day12;
+mod day13;
+mod fs;
 mod vec2d;
 
 use crate::vec2d::Vec2d;
 
 fn main() {
-    println!("{}", day_01_1("./input01.txt"));
-    println!("{}", day_01_2("./input01.txt"));
-    println!("{}", day_02_1("./input02.txt"));
-    println!("{}", day_02_2("./input02.txt"));
-    println!("{}", day_03_1("./input03.txt"));
-    println!("{}", day_03_2("./input03.txt"));
-    println!("{}", day_04_1("./input04.txt"));
-    println!("{}", day_04_2("./input04.txt"));
-    println!("{}", day_05_1("./input05.txt"));
-    println!("{}", day_05_2("./input05.txt"));
-    println!("{}", day_06_1("./input06.txt"));
-    println!("{}", day_06_2("./input06.txt"));
-    println!("{}", day_07_1("./input07.txt"));
-    println!("{}", day_07_2("./input07.txt"));
-    println!("{}", day_08_1("./input08.txt"));
-    println!("{}", day_08_2("./input08.txt"));
-    println!("{}", day_09_1("./input09.txt"));
-    println!("{}", day_09_2("./input09.txt"));
-    println!("{}", day_10_1("./input10.txt"));
-    println!("{}", day_10_2("./input10.txt"));
-    println!("{}", day_11_1("./input11.txt"));
-    println!("{}", day_11_2("./input11.txt"));
-    println!("{}", day_12_1("./input12.txt"));
-    println!("{}", day_12_2("./input12.txt"));
+    let args: Vec<String> = env::args().collect();
+    match (&args[1][..], &args[2][..]) {
+        ("1", "1") => println!("{}", day_01_1("./input01.txt")),
+        ("1", "2") => println!("{}", day_01_2("./input01.txt")),
+
+        ("2", "1") => println!("{}", day_02_1("./input02.txt")),
+        ("2", "2") => println!("{}", day_02_2("./input02.txt")),
+
+        ("3", "1") => println!("{}", day_03_1("./input03.txt")),
+        ("3", "2") => println!("{}", day_03_2("./input03.txt")),
+
+        ("4", "1") => println!("{}", day_04_1("./input04.txt")),
+        ("4", "2") => println!("{}", day_04_2("./input04.txt")),
+
+        ("5", "1") => println!("{}", day_05_1("./input05.txt")),
+        ("5", "2") => println!("{}", day_05_2("./input05.txt")),
+
+        ("6", "1") => println!("{}", day_06_1("./input06.txt")),
+        ("6", "2") => println!("{}", day_06_2("./input06.txt")),
+
+        ("7", "1") => println!("{}", day_07_1("./input07.txt")),
+        ("7", "2") => println!("{}", day_07_2("./input07.txt")),
+
+        ("8", "1") => println!("{}", day_08_1("./input08.txt")),
+        ("8", "2") => println!("{}", day_08_2("./input08.txt")),
+
+        ("9", "1") => println!("{}", day_09_1("./input09.txt")),
+        ("9", "2") => println!("{}", day_09_2("./input09.txt")),
+
+        ("10", "1") => println!("{}", day_10_1("./input10.txt")),
+        ("10", "2") => println!("{}", day_10_2("./input10.txt")),
+
+        ("11", "1") => println!("{}", day_11_1("./input11.txt")),
+        ("11", "2") => println!("{}", day_11_2("./input11.txt")),
+
+        ("12", "1") => println!("{}", day12::day_12_1("./input12.txt")),
+        ("12", "2") => println!("{}", day12::day_12_2("./input12.txt")),
+
+        ("13", "1") => println!("{}", day13::day_13_1("./input13.txt")),
+
+        _ => panic!("Unimplemented puzzle"),
+    }
 }
 
 struct CaloriesInput {
@@ -84,7 +103,7 @@ impl Iterator for CaloriesInput {
 }
 
 fn file_calories(filename: &str) -> io::Result<CaloriesInput> {
-    let lines = read_lines(filename)?;
+    let lines = fs::read_lines(filename)?;
     Ok(CaloriesInput {
         lines,
         processing: false,
@@ -140,14 +159,6 @@ fn day_01_2(filename: &str) -> u32 {
 #[test]
 fn test_day01_2() {
     assert_eq!(day_01_2("./test01.txt"), 45000);
-}
-
-fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
-where
-    P: AsRef<Path>,
-{
-    let file = File::open(filename)?;
-    Ok(io::BufReader::new(file).lines())
 }
 
 #[derive(Clone, Copy)]
@@ -258,7 +269,7 @@ fn test_score_round(#[case] round: Round, #[case] score: u32) {
 }
 
 fn process_tournament(filename: &str, decryptor: MyMoveDecryptor) -> u32 {
-    let lines = read_lines(filename).unwrap();
+    let lines = fs::read_lines(filename).unwrap();
     let tournament = TournamentInput { lines, decryptor };
     let mut total_score = 0;
     for round in tournament {
@@ -341,7 +352,7 @@ fn test_get_priority(#[case] item: char, #[case] priority: u32) {
 }
 
 fn day_03_1(filename: &str) -> u32 {
-    let lines = read_lines(filename).unwrap();
+    let lines = fs::read_lines(filename).unwrap();
     let rucksacks_input = RucksacksInput { lines };
     let mut total_priority = 0;
     for rucksack in rucksacks_input {
@@ -362,7 +373,7 @@ fn test_day_03_1() {
 }
 
 fn day_03_2(filename: &str) -> u32 {
-    let lines = read_lines(filename).unwrap();
+    let lines = fs::read_lines(filename).unwrap();
     let rucksacks_input = RucksacksInput { lines };
     let mut total_priority = 0;
     let mut common_items = HashSet::new();
@@ -453,7 +464,7 @@ fn test_one_contains_other(#[case] pair: AssignmentPair, #[case] result: bool) {
 fn day_04_1(filename: &str) -> u32 {
     let mut result = 0;
     for pair in (AssignmentPairsInput {
-        lines: read_lines(filename).unwrap(),
+        lines: fs::read_lines(filename).unwrap(),
     }) {
         if one_contains_other(pair) {
             result += 1;
@@ -488,7 +499,7 @@ fn test_overlaps(#[case] pair: AssignmentPair, #[case] result: bool) {
 fn day_04_2(filename: &str) -> u32 {
     let mut result = 0;
     for pair in (AssignmentPairsInput {
-        lines: read_lines(filename).unwrap(),
+        lines: fs::read_lines(filename).unwrap(),
     }) {
         if overlaps(pair) {
             result += 1;
@@ -504,7 +515,7 @@ fn test_day_04_2() {
 
 fn day_05_1(filename: &str) -> String {
     let mut stacks: Vec<VecDeque<char>> = Vec::new();
-    let mut lines = read_lines(filename).unwrap().filter_map(|s| s.ok());
+    let mut lines = fs::read_lines(filename).unwrap().filter_map(|s| s.ok());
     let crate_section = lines.by_ref().take_while(|s| s != "");
     for layer in crate_section {
         if layer == String::from("") {
@@ -541,7 +552,7 @@ fn day_05_1(filename: &str) -> String {
 
 fn day_05_2(filename: &str) -> String {
     let mut stacks: Vec<VecDeque<char>> = Vec::new();
-    let mut lines = read_lines(filename).unwrap().filter_map(|s| s.ok());
+    let mut lines = fs::read_lines(filename).unwrap().filter_map(|s| s.ok());
     let crate_section = lines.by_ref().take_while(|s| s != "");
     for layer in crate_section {
         if layer == String::from("") {
@@ -673,7 +684,7 @@ fn inspect_filesystem(filename: &str) -> DirectoryListing {
     let root = Rc::new(RefCell::new(DirectoryListing::new(None)));
     {
         let mut current_directory = Rc::clone(&root);
-        for line in read_lines(filename).unwrap().filter_map(|s| s.ok()) {
+        for line in fs::read_lines(filename).unwrap().filter_map(|s| s.ok()) {
             if line.starts_with("$ ") {
                 let command: Vec<&str> = (&line[2..]).split(' ').collect();
                 if command[0] == "cd" {
@@ -758,33 +769,13 @@ fn test_day_07_2() {
     assert_eq!(day_07_2("./test07.txt"), 24933642);
 }
 
-fn vec2d_input_from_file(filename: &str) -> Vec<Vec<u8>> {
-    let mut result: Vec<Vec<u8>> = Vec::new();
-    let mut input = io::BufReader::new(File::open(filename).unwrap());
-    loop {
-        let mut line = Vec::new();
-        match input.read_until('\n' as u8, &mut line) {
-            Err(_) => break,
-            _ => {
-                if line.len() < 1 {
-                    break;
-                } else if line.last() == Some(&('\n' as u8)) {
-                    line.pop();
-                }
-            }
-        }
-        result.push(line);
-    }
-    result
-}
-
 fn forest_from_file<T>(filename: &str) -> Vec2d<T>
 where
     T: Copy + FromStr,
     T::Err: Debug,
 {
     let forest_vec: Vec<T>;
-    let forest_input = vec2d_input_from_file(filename);
+    let forest_input = vec2d::input_from_file(filename);
     let (width, height) = (forest_input.get(0).unwrap().len(), forest_input.len());
     forest_vec = forest_input
         .into_iter()
@@ -792,14 +783,6 @@ where
         .map(|u| str::from_utf8(&[u]).unwrap().parse::<T>().unwrap())
         .collect();
     Vec2d::new(forest_vec, height, width)
-}
-
-fn map_from_file(filename: &str) -> Vec2d<u8> {
-    let map_vec: Vec<u8>;
-    let input = vec2d_input_from_file(filename);
-    let (width, height) = (input.get(0).unwrap().len(), input.len());
-    map_vec = input.into_iter().flatten().collect();
-    Vec2d::new(map_vec, height, width)
 }
 
 fn day_08_1(filename: &str) -> u32 {
@@ -1035,7 +1018,7 @@ fn test_move_rope_callback() {
 }
 
 fn moves_from_file(filename: &str) -> Vec<Coord> {
-    read_lines(filename)
+    fs::read_lines(filename)
         .unwrap()
         .into_iter()
         .filter_map(|r| r.ok())
@@ -1130,7 +1113,7 @@ fn test_run_program(#[case] program: Vec<Instruction>, #[case] cycle_x_values: V
 }
 
 fn program_from_file(filename: &str) -> Vec<Instruction> {
-    read_lines(filename)
+    fs::read_lines(filename)
         .unwrap()
         .into_iter()
         .filter_map(|r| r.ok())
@@ -1345,150 +1328,4 @@ fn day_11_2(filename: &str) -> u64 {
 #[test]
 fn test_day_11_2() {
     assert_eq!(day_11_2("./test11.txt"), 2713310158);
-}
-
-#[derive(Debug, PartialEq)]
-struct Heightmap {
-    elevations: Vec2d<u8>,
-    start: (usize, usize),
-    end: (usize, usize),
-}
-
-fn heightmap_from_file(filename: &str) -> Heightmap {
-    let mut elevations: Vec2d<u8> = map_from_file(filename);
-    let mut start = (0, 0);
-    let mut end = (0, 0);
-    for i in 0..elevations.row_count {
-        for j in 0..elevations.col_count {
-            let spot = elevations.index_mut(i, j);
-            if *spot == 'S' as u8 {
-                start = (i, j);
-                *spot = 'a' as u8;
-            } else if *spot == 'E' as u8 {
-                end = (i, j);
-                *spot = 'z' as u8;
-            }
-        }
-    }
-    Heightmap {
-        elevations,
-        start,
-        end,
-    }
-}
-
-#[test]
-fn test_heightmap_from_file() {
-    let result = Heightmap {
-        elevations: Vec2d::new(
-            Vec::from_iter("aabqponmabcryxxlaccszzxkacctuvwjabdefghi".bytes()),
-            5,
-            8,
-        ),
-        start: (0, 0),
-        end: (2, 5),
-    };
-    assert_eq!(heightmap_from_file("./test12.txt"), result);
-}
-
-fn paths_from_heightmap(
-    heightmap: &Heightmap,
-    reversed_edges: bool,
-) -> GraphMap<(usize, usize), i32, petgraph::Directed> {
-    let mut paths = GraphMap::new();
-    for i in 0..heightmap.elevations.row_count {
-        for j in 0..heightmap.elevations.col_count {
-            paths.add_node((i, j));
-        }
-    }
-    for i in 0..heightmap.elevations.row_count {
-        for j in 0..heightmap.elevations.col_count {
-            let me = heightmap.elevations.index(i, j);
-            let me_coords = (i, j);
-            if i > 0 {
-                // Add a directed edge, if appropriate, to the square above this one
-                let them = heightmap.elevations.index(i - 1, j);
-                let them_coords = (i - 1, j);
-                if *them <= me + 1 {
-                    if reversed_edges {
-                        paths.add_edge(them_coords, me_coords, 1);
-                    } else {
-                        paths.add_edge(me_coords, them_coords, 1);
-                    }
-                }
-            }
-            if i < heightmap.elevations.row_count - 1 {
-                // The square below
-                let them = heightmap.elevations.index(i + 1, j);
-                let them_coords = (i + 1, j);
-                if *them <= me + 1 {
-                    if reversed_edges {
-                        paths.add_edge(them_coords, me_coords, 1);
-                    } else {
-                        paths.add_edge(me_coords, them_coords, 1);
-                    }
-                }
-            }
-            if j > 0 {
-                // The square to the left
-                let them = heightmap.elevations.index(i, j - 1);
-                let them_coords = (i, j - 1);
-                if *them <= me + 1 {
-                    if reversed_edges {
-                        paths.add_edge(them_coords, me_coords, 1);
-                    } else {
-                        paths.add_edge(me_coords, them_coords, 1);
-                    }
-                }
-            }
-            if j < heightmap.elevations.col_count - 1 {
-                // The square to the right
-                let them = heightmap.elevations.index(i, j + 1);
-                let them_coords = (i, j + 1);
-                if *them <= me + 1 {
-                    if reversed_edges {
-                        paths.add_edge(them_coords, me_coords, 1);
-                    } else {
-                        paths.add_edge(me_coords, them_coords, 1);
-                    }
-                }
-            }
-        }
-    }
-    paths
-}
-
-fn day_12_1(filename: &str) -> i32 {
-    let map = heightmap_from_file(filename);
-    let paths = paths_from_heightmap(&map, false);
-    *dijkstra(&paths, map.start, Some(map.end), |_| 1)
-        .get(&map.end)
-        .unwrap()
-}
-
-#[test]
-fn test_day_12_1() {
-    assert_eq!(day_12_1("./test12.txt"), 31);
-}
-
-fn day_12_2(filename: &str) -> i32 {
-    let map = heightmap_from_file(filename);
-    let paths = paths_from_heightmap(&map, true);
-    let shortest_paths = dijkstra(&paths, map.end, None, |_| 1);
-    shortest_paths
-        .into_iter()
-        .filter_map(|(k, v)| {
-            if *map.elevations.index(k.0, k.1) == 'a' as u8 {
-                Some(v)
-            } else {
-                None
-            }
-        })
-        .min()
-        .unwrap()
-}
-
-#[test]
-fn test_day_12_2() {
-    assert_eq!(day_12_2("./test12.txt"), 29);
 }

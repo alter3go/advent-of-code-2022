@@ -1,5 +1,9 @@
 // Mutably borrowed ;) from https://stackoverflow.com/questions/13102786/two-dimensional-vectors-in-rust
-use std::fmt;
+use std::{
+    fmt,
+    fs::File,
+    io::{self, BufRead},
+};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Vec2d<T>
@@ -68,4 +72,24 @@ fn test_vec2d_row_col() {
     let a: Vec2d<u8> = Vec2d::new((1..=30).collect(), 6, 5);
     assert_eq!(a.col(0), vec![1, 6, 11, 16, 21, 26]);
     assert_eq!(a.row(0), &[1, 2, 3, 4, 5]);
+}
+
+pub fn input_from_file(filename: &str) -> Vec<Vec<u8>> {
+    let mut result: Vec<Vec<u8>> = Vec::new();
+    let mut input = io::BufReader::new(File::open(filename).unwrap());
+    loop {
+        let mut line = Vec::new();
+        match input.read_until('\n' as u8, &mut line) {
+            Err(_) => break,
+            _ => {
+                if line.len() < 1 {
+                    break;
+                } else if line.last() == Some(&('\n' as u8)) {
+                    line.pop();
+                }
+            }
+        }
+        result.push(line);
+    }
+    result
 }
