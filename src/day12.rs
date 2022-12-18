@@ -1,5 +1,6 @@
 use petgraph::algo::dijkstra;
 use petgraph::prelude::GraphMap;
+use rstest::rstest;
 
 use crate::vec2d;
 use crate::vec2d::Vec2d;
@@ -123,7 +124,7 @@ fn paths_from_heightmap(
     paths
 }
 
-pub fn day_12_1(filename: &str) -> i32 {
+pub fn part_1(filename: &str) -> i32 {
     let map = heightmap_from_file(filename);
     let paths = paths_from_heightmap(&map, false);
     *dijkstra(&paths, map.start, Some(map.end), |_| 1)
@@ -131,12 +132,14 @@ pub fn day_12_1(filename: &str) -> i32 {
         .unwrap()
 }
 
-#[test]
-fn test_day_12_1() {
-    assert_eq!(day_12_1("./test12.txt"), 31);
+#[rstest]
+#[case::test("./test12.txt", 31)]
+#[case::input("./input12.txt", 497)]
+fn test_part_1(#[case] filename: &str, #[case] result: i32) {
+    assert_eq!(part_1(filename), result);
 }
 
-pub fn day_12_2(filename: &str) -> i32 {
+pub fn part_2(filename: &str) -> i32 {
     let map = heightmap_from_file(filename);
     let paths = paths_from_heightmap(&map, true);
     let shortest_paths = dijkstra(&paths, map.end, None, |_| 1);
@@ -153,7 +156,9 @@ pub fn day_12_2(filename: &str) -> i32 {
         .unwrap()
 }
 
-#[test]
-fn test_day_12_2() {
-    assert_eq!(day_12_2("./test12.txt"), 29);
+#[rstest]
+#[case::test("./test12.txt", 29)]
+#[case::input("./input12.txt", 492)]
+fn test_part_2(#[case] filename: &str, #[case] result: i32) {
+    assert_eq!(part_2(filename), result);
 }

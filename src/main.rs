@@ -13,6 +13,7 @@ mod day10;
 mod day11;
 mod day12;
 mod day13;
+mod day14;
 mod fs;
 mod vec2d;
 
@@ -52,10 +53,14 @@ fn main() {
         ("11", "1") => println!("{}", day11::part_1("./input11.txt")),
         ("11", "2") => println!("{}", day11::part_2("./input11.txt")),
 
-        ("12", "1") => println!("{}", day12::day_12_1("./input12.txt")),
-        ("12", "2") => println!("{}", day12::day_12_2("./input12.txt")),
+        ("12", "1") => println!("{}", day12::part_1("./input12.txt")),
+        ("12", "2") => println!("{}", day12::part_2("./input12.txt")),
 
-        ("13", "1") => println!("{}", day13::day_13_1("./input13.txt")),
+        ("13", "1") => println!("{}", day13::part_1("./input13.txt")),
+        ("13", "2") => println!("{}", day13::part_2("./input13.txt")),
+
+        ("14", "1") => println!("{}", day14::part_1("./input14.txt")),
+        ("14", "2") => println!("{}", day14::part_1("./input14.txt")),
 
         _ => panic!("Unimplemented puzzle"),
     }

@@ -71,9 +71,11 @@ pub fn part_1(filename: &str) -> u32 {
     result
 }
 
-#[test]
-fn test_part_1() {
-    assert_eq!(part_1("./test04.txt"), 2);
+#[rstest]
+#[case::test("./test04.txt", 2)]
+#[case::input("./input04.txt", 413)]
+fn test_part_1(#[case] filename: &str, #[case] result: u32) {
+    assert_eq!(part_1(filename), result);
 }
 
 fn overlaps(pair: AssignmentPair) -> bool {
@@ -106,7 +108,9 @@ pub fn part_2(filename: &str) -> u32 {
     result
 }
 
-#[test]
-fn test_part_2() {
-    assert_eq!(part_2("./test04.txt"), 4);
+#[rstest]
+#[case::test("./test04.txt", 4)]
+#[case::input("./input04.txt", 806)]
+fn test_part_2(#[case] filename: &str, #[case] result: u32) {
+    assert_eq!(part_2(filename), result);
 }

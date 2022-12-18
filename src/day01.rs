@@ -1,5 +1,7 @@
 use std::{fs::File, io};
 
+use rstest::rstest;
+
 use crate::fs;
 
 struct CaloriesInput {
@@ -66,9 +68,11 @@ pub fn part_1(filename: &str) -> u32 {
     most_calories
 }
 
-#[test]
-fn test_part_1() {
-    assert_eq!(part_1("./test01.txt"), 24000);
+#[rstest]
+#[case::test("./test01.txt", 24000)]
+#[case::input("./input01.txt", 69795)]
+fn test_part_1(#[case] filename: &str, #[case] result: u32) {
+    assert_eq!(part_1(filename), result);
 }
 
 pub fn part_2(filename: &str) -> u32 {
@@ -90,7 +94,9 @@ pub fn part_2(filename: &str) -> u32 {
     top_three.iter().sum()
 }
 
-#[test]
-fn test_part_2() {
-    assert_eq!(part_2("./test01.txt"), 45000);
+#[rstest]
+#[case::test("./test01.txt", 45000)]
+#[case::input("./input01.txt", 208437)]
+fn test_part_2(#[case] filename: &str, #[case] result: u32) {
+    assert_eq!(part_2(filename), result);
 }

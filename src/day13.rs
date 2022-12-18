@@ -4,6 +4,33 @@ use std::cmp::Ordering;
 
 use crate::fs;
 
+#[derive(Clone, Eq)]
+struct Packet {
+    value: Value,
+}
+
+impl PartialEq for Packet {
+    fn eq(&self, other: &Self) -> bool {
+        compare_packets(&self.value, &other.value) == Ordering::Equal
+    }
+
+    fn ne(&self, other: &Self) -> bool {
+        !self.eq(other)
+    }
+}
+
+impl PartialOrd for Packet {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(compare_packets(&self.value, &other.value))
+    }
+}
+
+impl Ord for Packet {
+    fn cmp(&self, other: &Self) -> Ordering {
+        compare_packets(&self.value, &other.value)
+    }
+}
+
 fn compare_packets(p1: &Value, p2: &Value) -> Ordering {
     if p1.is_i64() && p2.is_i64() {
         let p1i = p1.as_i64().unwrap();
@@ -44,7 +71,7 @@ fn test_compare_packets(#[case] p1: Value, #[case] p2: Value, #[case] result: Or
     assert_eq!(compare_packets(&p1, &p2), result);
 }
 
-pub fn day_13_1(filename: &str) -> usize {
+pub fn part_1(filename: &str) -> usize {
     let mut result = 0;
     let mut i = 1;
     let mut lines = fs::read_lines(filename).unwrap().filter_map(|r| r.ok());
@@ -70,7 +97,50 @@ pub fn day_13_1(filename: &str) -> usize {
     result
 }
 
-#[test]
-fn test_day_13_1() {
-    assert_eq!(day_13_1("./test13.txt"), 13);
+#[rstest]
+#[case::test("./test13.txt", 13)]
+#[case::input("./input13.txt", 5185)]
+fn test_part_1(#[case] filename: &str, #[case] result: usize) {
+    assert_eq!(part_1(filename), result);
+}
+
+pub fn part_2(filename: &str) -> usize {
+    let divider_packets = [
+        Packet {
+            value: json!([[2]]),
+        },
+        Packet {
+            value: json!([[6]]),
+        },
+    ];
+    let mut packets: Vec<Packet> = fs::read_lines(filename)
+        .unwrap()
+        .filter_map(|r| r.ok())
+        .filter(|s| s.len() > 0)
+        .map(|s| Packet {
+            value: serde_json::from_str::<Value>(&s).unwrap(),
+        })
+        .chain(divider_packets.iter().cloned())
+        .collect();
+
+    packets.sort();
+    packets
+        .into_iter()
+        .enumerate()
+        .filter_map(|(i, p)| {
+            if p == divider_packets[0] || p == divider_packets[1] {
+                Some(i)
+            } else {
+                None
+            }
+        })
+        .map(|i| i + 1)
+        .product()
+}
+
+#[rstest]
+#[case::test("./test13.txt", 140)]
+#[case::input("./input13.txt", 23751)]
+fn test_part_2(#[case] filename: &str, #[case] result: usize) {
+    assert_eq!(part_2(filename), result);
 }

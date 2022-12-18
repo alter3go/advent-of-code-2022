@@ -1,5 +1,7 @@
 use std::collections::VecDeque;
 
+use rstest::rstest;
+
 use crate::fs;
 
 pub fn part_1(filename: &str) -> String {
@@ -39,9 +41,11 @@ pub fn part_1(filename: &str) -> String {
     stacks.into_iter().map(|s| s[0]).collect()
 }
 
-#[test]
-fn test_part_1() {
-    assert_eq!(part_1("./test05.txt"), "CMZ");
+#[rstest]
+#[case::test("./test05.txt", "CMZ")]
+#[case::input("./input05.txt", "FWNSHLDNZ")]
+fn test_part_1(#[case] filename: &str, #[case] result: &str) {
+    assert_eq!(part_1(filename), result);
 }
 
 pub fn part_2(filename: &str) -> String {
@@ -80,7 +84,9 @@ pub fn part_2(filename: &str) -> String {
     stacks.into_iter().map(|s| s[0]).collect()
 }
 
-#[test]
-fn test_part_2() {
-    assert_eq!(part_2("./test05.txt"), "MCD");
+#[rstest]
+#[case::test("./test05.txt", "MCD")]
+#[case::input("./input05.txt", "RNRGDNFQG")]
+fn test_part_2(#[case] filename: &str, #[case] result: &str) {
+    assert_eq!(part_2(filename), result);
 }

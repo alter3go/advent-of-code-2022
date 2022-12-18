@@ -75,9 +75,11 @@ pub fn part_1(filename: &str) -> u32 {
     total_priority
 }
 
-#[test]
-fn test_part_1() {
-    assert_eq!(part_1("./test03.txt"), 157);
+#[rstest]
+#[case::test("./test03.txt", 157)]
+#[case::input("./input03.txt", 7917)]
+fn test_part_1(#[case] filename: &str, #[case] result: u32) {
+    assert_eq!(part_1(filename), result);
 }
 
 pub fn part_2(filename: &str) -> u32 {
@@ -112,7 +114,9 @@ pub fn part_2(filename: &str) -> u32 {
     total_priority
 }
 
-#[test]
-fn test_part_2() {
-    assert_eq!(part_2("./test03.txt"), 70);
+#[rstest]
+#[case::test("./test03.txt", 70)]
+#[case::input("./input03.txt", 2585)]
+fn test_part_2(#[case] filename: &str, #[case] result: u32) {
+    assert_eq!(part_2(filename), result);
 }

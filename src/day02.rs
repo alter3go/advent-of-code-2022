@@ -125,16 +125,20 @@ pub fn part_1(filename: &str) -> u32 {
     process_tournament(filename, decrypt_my_move)
 }
 
-#[test]
-fn test_part_1() {
-    assert_eq!(part_1("./test02.txt"), 15);
+#[rstest]
+#[case::test("./test02.txt", 15)]
+#[case::input("./input02.txt", 10624)]
+fn test_part_1(#[case] filename: &str, #[case] result: u32) {
+    assert_eq!(part_1(filename), result);
 }
 
 pub fn part_2(filename: &str) -> u32 {
     process_tournament(filename, decrypt_my_move_differently)
 }
 
-#[test]
-fn test_part_2() {
-    assert_eq!(part_2("./test02.txt"), 12);
+#[rstest]
+#[case::test("./test02.txt", 12)]
+#[case::input("./input02.txt", 14060)]
+fn test_part_2(#[case] filename: &str, #[case] result: u32) {
+    assert_eq!(part_2(filename), result);
 }
